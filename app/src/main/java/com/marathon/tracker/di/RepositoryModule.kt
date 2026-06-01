@@ -1,10 +1,12 @@
 package com.marathon.tracker.di
 
 import com.marathon.tracker.data.repository.CoachingRepositoryImpl
+import com.marathon.tracker.data.repository.PlanRepositoryImpl
 import com.marathon.tracker.data.repository.StravaRepositoryImpl
 import com.marathon.tracker.data.repository.UserPreferencesRepositoryImpl
 import com.marathon.tracker.data.repository.WorkoutRepositoryImpl
 import com.marathon.tracker.domain.repository.CoachingRepository
+import com.marathon.tracker.domain.repository.PlanRepository
 import com.marathon.tracker.domain.repository.StravaRepository
 import com.marathon.tracker.domain.repository.UserPreferencesRepository
 import com.marathon.tracker.domain.repository.WorkoutRepository
@@ -33,4 +35,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindUserPreferencesRepository(impl: UserPreferencesRepositoryImpl): UserPreferencesRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindPlanRepository(impl: PlanRepositoryImpl): PlanRepository
 }

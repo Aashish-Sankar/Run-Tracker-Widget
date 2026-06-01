@@ -33,7 +33,9 @@ import com.marathon.tracker.presentation.activities.ActivitiesScreen
 import com.marathon.tracker.presentation.auth.AuthViewModel
 import com.marathon.tracker.presentation.coaching.CoachingScreen
 import com.marathon.tracker.presentation.dashboard.DashboardScreen
+import com.marathon.tracker.presentation.plan.PlanManagementScreen
 import com.marathon.tracker.presentation.plan.PlanScreen
+import com.marathon.tracker.presentation.plan.PlanSetupScreen
 import com.marathon.tracker.presentation.settings.SettingsScreen
 import com.marathon.tracker.presentation.theme.MarathonTheme
 import com.marathon.tracker.presentation.today.TodayScreen
@@ -121,7 +123,21 @@ private fun MarathonApp() {
         ) {
             composable(Screen.Today.route) { TodayScreen() }
             composable(Screen.Dashboard.route) { DashboardScreen() }
-            composable(Screen.Plan.route) { PlanScreen() }
+            composable(Screen.Plan.route) {
+                PlanScreen(onManagePlans = { navController.navigate("plan_management") })
+            }
+            composable("plan_management") {
+                PlanManagementScreen(
+                    onBack = { navController.popBackStack() },
+                    onCreatePlan = { navController.navigate("plan_setup") },
+                )
+            }
+            composable("plan_setup") {
+                PlanSetupScreen(
+                    onBack = { navController.popBackStack() },
+                    onSaved = { navController.popBackStack("plan_management", inclusive = false) },
+                )
+            }
             composable(Screen.Activities.route) { ActivitiesScreen() }
             composable(Screen.Coaching.route) { CoachingScreen() }
             composable(Screen.Settings.route) { SettingsScreen() }

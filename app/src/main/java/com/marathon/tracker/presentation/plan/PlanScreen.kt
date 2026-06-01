@@ -17,9 +17,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -43,9 +47,13 @@ import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlanScreen(viewModel: PlanViewModel = hiltViewModel()) {
+fun PlanScreen(
+    onManagePlans: () -> Unit = {},
+    viewModel: PlanViewModel = hiltViewModel(),
+) {
     val allWeeks by viewModel.allWeeks.collectAsStateWithLifecycle()
     val selectedPhase by viewModel.selectedPhase.collectAsStateWithLifecycle()
+    val activePlanName by viewModel.activePlanName.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
 
     LaunchedEffect(allWeeks) {
@@ -53,7 +61,18 @@ fun PlanScreen(viewModel: PlanViewModel = hiltViewModel()) {
         if (currentIndex >= 0) listState.scrollToItem(currentIndex)
     }
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Training Plan") }) }) { padding ->
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(activePlanName) },
+                actions = {
+                    IconButton(onClick = onManagePlans) {
+                        Icon(Icons.Default.Tune, contentDescription = "Manage Plans")
+                    }
+                },
+            )
+        },
+    ) { padding ->
         Column(Modifier.padding(padding)) {
             PhaseFilterRow(selectedPhase, onSelect = viewModel::selectPhase)
             LazyColumn(state = listState, contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
