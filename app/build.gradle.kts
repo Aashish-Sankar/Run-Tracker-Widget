@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
 }
 
 val localProperties = Properties().apply {
@@ -57,10 +58,13 @@ android {
         buildConfig = true
     }
 
-    ksp {
-        arg("room.schemaLocation", "$projectDir/schemas")
-        arg("room.incremental", "true")
+    room {
+        schemaDirectory("$projectDir/schemas")
     }
+}
+
+ksp {
+    arg("room.incremental", "true")
 }
 
 dependencies {
