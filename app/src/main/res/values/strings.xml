@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Marathon Tracker</string>
+    <string name="app_name">MilePost</string>
 
     <!-- Widget strings -->
-    <string name="widget_name_small">Marathon Today (Small)</string>
+    <string name="widget_name_small">MilePost Today (Small)</string>
     <string name="widget_description_small">Shows today\'s workout and race countdown</string>
-    <string name="widget_name_large">Marathon Today (Large)</string>
+    <string name="widget_name_large">MilePost Today (Large)</string>
     <string name="widget_description_large">Shows full workout details, Strava match, and weekly progress</string>
 
     <!-- Notification channels -->

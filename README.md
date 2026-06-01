@@ -1,4 +1,4 @@
-# Pacer — Marathon Training Tracker
+# MilePost — Marathon Training Tracker
 
 A native Android app for serious marathon runners. Track your 35-week training plan, sync your runs from Strava, get weekly AI-powered coaching insights, and glance at today's workout without opening your phone.
 
