@@ -80,7 +80,7 @@ class MarathonWidget : GlanceAppWidget() {
 }
 
 @Composable
-private fun MarathonWidgetSmall(state: WidgetState?) {
+internal fun MarathonWidgetSmall(state: WidgetState?) {
     val phase = state?.currentPhase ?: TrainingPhase.BASE_BUILDING
     val accentColor = ColorProvider(Color(phase.colorHex))
     val todayWorkout = state?.todayWorkout
@@ -166,7 +166,7 @@ private fun MarathonWidgetSmall(state: WidgetState?) {
 }
 
 @Composable
-private fun MarathonWidgetLarge(state: WidgetState?) {
+internal fun MarathonWidgetLarge(state: WidgetState?) {
     val phase = state?.currentPhase ?: TrainingPhase.BASE_BUILDING
     val accentColor = ColorProvider(Color(phase.colorHex))
     val todayWorkout = state?.todayWorkout
