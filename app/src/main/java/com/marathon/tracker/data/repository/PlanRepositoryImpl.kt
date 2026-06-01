@@ -1,9 +1,11 @@
 package com.marathon.tracker.data.repository
 
+import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import com.marathon.tracker.R
 import com.marathon.tracker.data.local.dao.TrainingPlanDao
 import com.marathon.tracker.data.local.dto.DayWorkoutDto
 import com.marathon.tracker.data.local.dto.RaceDto
@@ -20,6 +22,7 @@ import com.marathon.tracker.domain.model.TrainingPhase
 import com.marathon.tracker.domain.model.TrainingPlan
 import com.marathon.tracker.domain.model.WeekPlan
 import com.marathon.tracker.domain.repository.PlanRepository
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -33,13 +36,14 @@ import javax.inject.Singleton
 
 @Singleton
 class PlanRepositoryImpl @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val trainingPlanDao: TrainingPlanDao,
     private val dataStore: DataStore<Preferences>,
 ) : PlanRepository {
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    private val defaultPlanSeededKey = booleanPreferencesKey("default_plan_seeded")
+    private val defaultPlanSeededKey = booleanPreferencesKey("default_plan_seeded_v2")
 
     override fun getAllPlans(): Flow<List<TrainingPlan>> =
         trainingPlanDao.getAll().map { entities ->
@@ -132,22 +136,24 @@ class PlanRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun seedDefaultIfNeeded(defaultWeeks: List<WeekPlan>, defaultRaces: List<Race>) {
+    override suspend fun seedDefaultIfNeeded() {
         val prefs = dataStore.data.first()
-        val alreadySeeded = prefs[defaultPlanSeededKey] ?: false
-        if (alreadySeeded) return
+        if (prefs[defaultPlanSeededKey] == true) return
 
-        val weekDtos = defaultWeeks.map { it.toDto() }
-        val raceDtos = defaultRaces.map { it.toDto() }
-        val startDate = defaultWeeks.firstOrNull()?.startDate ?: LocalDate.now()
+        val jsonString = context.resources.openRawResource(R.raw.default_training_plan)
+            .bufferedReader()
+            .use { it.readText() }
+
+        val dto = json.decodeFromString<TrainingPlanDto>(jsonString)
+        val startDate = LocalDate.parse(dto.startDate)
 
         val entity = TrainingPlanEntity(
             id = "default",
-            name = "MilePost Default Plan",
+            name = dto.name,
             startDateEpochDay = startDate.toEpochDay(),
-            targetMarathonSeconds = null,
-            racesJson = json.encodeToString(raceDtos),
-            weeksJson = json.encodeToString(weekDtos),
+            targetMarathonSeconds = dto.targetMarathonSeconds,
+            racesJson = json.encodeToString(dto.races),
+            weeksJson = json.encodeToString(dto.weeks),
             isActive = true,
             isDefault = true,
             createdAtMillis = System.currentTimeMillis(),
@@ -190,7 +196,11 @@ class PlanRepositoryImpl @Inject constructor(
     )
 
     private fun WeekPlanDto.toWeekPlan(): WeekPlan {
-        val resolvedPhase = TrainingPhase.valueOf(phase)
+        val resolvedPhase = when (phase) {
+            "BUILD" -> TrainingPhase.AEROBIC_DEVELOPMENT
+            "PEAK" -> TrainingPhase.PEAK_TRAINING
+            else -> runCatching { TrainingPhase.valueOf(phase) }.getOrDefault(TrainingPhase.BASE_BUILDING)
+        }
         val days = days.map { it.toDayWorkout(weekNumber, resolvedPhase) }
         val startDate = days.firstOrNull()?.date ?: LocalDate.now()
         return WeekPlan(
@@ -222,12 +232,18 @@ class PlanRepositoryImpl @Inject constructor(
             )
         } else null
 
+        val resolvedRunType = when (runType) {
+            "MP_RUN" -> RunType.MARATHON_PACE
+            "SHAKEOUT" -> RunType.RECOVERY_RUN
+            else -> runCatching { RunType.valueOf(runType) }.getOrDefault(RunType.EASY)
+        }
+
         return DayWorkout(
             date = LocalDate.parse(date),
             weekNumber = weekNumber,
             dayOfWeek = DayOfWeek.valueOf(dayOfWeek),
             phase = phase,
-            runType = RunType.valueOf(runType),
+            runType = resolvedRunType,
             distanceKm = distanceKm,
             paceRange = paceRange,
             gymSession = gymSession,

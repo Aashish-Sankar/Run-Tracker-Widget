@@ -56,7 +56,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         val themeMode = runBlocking { preferencesRepository.getThemeMode().first() }
         setContent {
-            MarathonTheme(themeMode = themeMode, dynamicColor = true) {
+            MarathonTheme(themeMode = themeMode) {
                 MarathonApp()
             }
         }
@@ -65,7 +65,7 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         val data = intent.data ?: return
-        if (data.scheme == "marathon" && data.host == "strava") {
+        if (data.scheme == "marathon" && data.host == "marathon") {
             val code = data.getQueryParameter("code") ?: return
             authViewModel.handleStravaCallback(code)
         }

@@ -29,27 +29,28 @@ val md_theme_light_surfaceVariant = Color(0xFFF4DDD6)  // Warm tinted surface
 val md_theme_light_onSurfaceVariant = Color(0xFF52443F)
 val md_theme_light_outline = Color(0xFF85736D)
 
-// Dark theme: Strava's dark app feel — charcoal base, vivid orange accents
-val md_theme_dark_primary = Color(0xFFFFB59C)         // Soft orange on dark
-val md_theme_dark_onPrimary = Color(0xFF5C1500)
-val md_theme_dark_primaryContainer = Color(0xFFBE3500)  // Rich burnt orange container
+// Dark theme: Strava's dark app feel — neutral charcoal base, vivid orange accents
+val md_theme_dark_primary = Color(0xFFFC4C02)          // Full Strava orange on dark
+val md_theme_dark_onPrimary = Color(0xFFFFFFFF)
+val md_theme_dark_primaryContainer = Color(0xFFBE3500)
 val md_theme_dark_onPrimaryContainer = Color(0xFFFFDBCF)
 
-val md_theme_dark_secondary = Color(0xFFFFB59C)
-val md_theme_dark_onSecondary = Color(0xFF541E00)
+val md_theme_dark_secondary = Color(0xFFFF7043)
+val md_theme_dark_onSecondary = Color(0xFF000000)
 val md_theme_dark_secondaryContainer = Color(0xFF773200)
 val md_theme_dark_onSecondaryContainer = Color(0xFFFFDBCF)
 
-val md_theme_dark_tertiary = Color(0xFFF5C010)        // Bright gold on dark
+val md_theme_dark_tertiary = Color(0xFFF5C010)         // Bright gold on dark
 val md_theme_dark_onTertiary = Color(0xFF3D2E00)
 val md_theme_dark_tertiaryContainer = Color(0xFF584400)
 val md_theme_dark_onTertiaryContainer = Color(0xFFFFDF92)
 
-val md_theme_dark_background = Color(0xFF201A19)       // Strava dark charcoal
-val md_theme_dark_surface = Color(0xFF201A19)
-val md_theme_dark_surfaceVariant = Color(0xFF52443F)
-val md_theme_dark_onSurfaceVariant = Color(0xFFD8C2BB)
-val md_theme_dark_outline = Color(0xFFA08D87)
+val md_theme_dark_background = Color(0xFF1C1C1E)       // Neutral Strava charcoal
+val md_theme_dark_surface = Color(0xFF1C1C1E)
+val md_theme_dark_surfaceVariant = Color(0xFF2C2C2E)
+val md_theme_dark_onSurface = Color(0xFFEAEAEA)
+val md_theme_dark_onSurfaceVariant = Color(0xFFAEAEB2)
+val md_theme_dark_outline = Color(0xFF636366)
 
 fun TrainingPhase.toColor(): Color = when (this) {
     TrainingPhase.BASE_BUILDING -> Color(colorHex)

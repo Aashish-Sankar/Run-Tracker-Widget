@@ -20,5 +20,5 @@ interface PlanRepository {
         targetMarathonSeconds: Int?,
         races: List<Race>,
     ): TrainingPlan
-    suspend fun seedDefaultIfNeeded(defaultWeeks: List<WeekPlan>, defaultRaces: List<Race>)
+    suspend fun seedDefaultIfNeeded()
 }

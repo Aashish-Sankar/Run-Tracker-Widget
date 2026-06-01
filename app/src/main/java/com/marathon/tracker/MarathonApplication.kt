@@ -4,7 +4,6 @@ import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import androidx.work.WorkManager
-import com.marathon.tracker.data.workout.WorkoutData
 import com.marathon.tracker.domain.repository.PlanRepository
 import com.marathon.tracker.sync.NotificationSchedulerWorker
 import com.marathon.tracker.util.NotificationChannelManager
@@ -30,7 +29,7 @@ class MarathonApplication : Application(), Configuration.Provider {
         NotificationSchedulerWorker.scheduleMorning(wm)
         NotificationSchedulerWorker.scheduleEvening(wm)
         appScope.launch {
-            planRepository.seedDefaultIfNeeded(WorkoutData.ALL_WEEKS, WorkoutData.RACES)
+            planRepository.seedDefaultIfNeeded()
         }
     }
 

@@ -24,7 +24,7 @@ class StravaAuthManager @Inject constructor(
     fun buildAuthUri(): Uri =
         Uri.parse("https://www.strava.com/oauth/authorize").buildUpon()
             .appendQueryParameter("client_id", BuildConfig.STRAVA_CLIENT_ID)
-            .appendQueryParameter("redirect_uri", "marathon://strava/callback")
+            .appendQueryParameter("redirect_uri", "marathon://marathon/callback")
             .appendQueryParameter("response_type", "code")
             .appendQueryParameter("approval_prompt", "auto")
             .appendQueryParameter("scope", "activity:read_all,profile:read_all")
