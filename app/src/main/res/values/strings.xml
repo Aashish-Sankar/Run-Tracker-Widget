@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Marathon Tracker</string>
+
+    <!-- Widget strings -->
+    <string name="widget_name_small">Marathon Today (Small)</string>
+    <string name="widget_description_small">Shows today\'s workout and race countdown</string>
+    <string name="widget_name_large">Marathon Today (Large)</string>
+    <string name="widget_description_large">Shows full workout details, Strava match, and weekly progress</string>
+
+    <!-- Notification channels -->
+    <string name="channel_daily_workout_name">Daily Workout</string>
+    <string name="channel_daily_workout_desc">Reminders for today\'s training session</string>
+    <string name="channel_pre_race_name">Pre-Race Alerts</string>
+    <string name="channel_pre_race_desc">Reminders in the week before a race</string>
+    <string name="channel_strava_sync_name">Strava Sync</string>
+    <string name="channel_strava_sync_desc">Activity sync status updates</string>
+    <string name="channel_coaching_name">Coaching Reports</string>
+    <string name="channel_coaching_desc">Weekly AI coaching report notifications</string>
+    <string name="channel_missed_run_name">Missed Run</string>
+    <string name="channel_missed_run_desc">Evening reminder if today\'s run wasn\'t logged</string>
+</resources>
