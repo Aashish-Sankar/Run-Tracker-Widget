@@ -8,10 +8,13 @@ import com.marathon.tracker.domain.model.DayWorkout
 import com.marathon.tracker.domain.model.RunType
 import com.marathon.tracker.domain.model.StravaActivity
 import com.marathon.tracker.domain.model.TrainingPhase
+import com.marathon.tracker.domain.repository.PlanRepository
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -24,18 +27,24 @@ class WorkoutRepositoryTest {
 
     private val workoutLogDao: WorkoutLogDao = mockk()
     private val stravaActivityDao: StravaActivityDao = mockk()
+    private val planRepository: PlanRepository = mockk()
     private lateinit var repository: WorkoutRepositoryImpl
 
     @Before
     fun setUp() {
-        // Provide stubs for flows used in getTodayWorkout / getWeekSummary
+        every { planRepository.observeActivePlan() } returns flowOf(null)
         every { workoutLogDao.getWeeklyActualKm(any()) } returns flowOf(0.0)
         every { workoutLogDao.getCompletedDaysInWeek(any()) } returns flowOf(0)
         every { stravaActivityDao.getLastActivity() } returns flowOf(null)
         coEvery { workoutLogDao.getLogForDate(any()) } returns null
         coEvery { stravaActivityDao.getRunForDate(any()) } returns null
 
-        repository = WorkoutRepositoryImpl(workoutLogDao, stravaActivityDao)
+        repository = WorkoutRepositoryImpl(
+            workoutLogDao,
+            stravaActivityDao,
+            planRepository,
+            CoroutineScope(UnconfinedTestDispatcher()),
+        )
     }
 
     private fun stravaActivity(distanceKm: Double = 10.0, type: String = "Run") = StravaActivity(

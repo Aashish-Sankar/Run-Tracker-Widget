@@ -97,7 +97,7 @@ class WorkoutDataTest {
     @Test
     fun `totalKm per week is positive`() {
         WorkoutData.ALL_WEEKS.forEach { week ->
-            assertTrue("Week ${week.weekNumber} should have positive total km", week.totalKm > 0)
+            assertTrue("Week ${week.weekNumber} should have positive total km", week.totalPlannedKm > 0)
         }
     }
 
