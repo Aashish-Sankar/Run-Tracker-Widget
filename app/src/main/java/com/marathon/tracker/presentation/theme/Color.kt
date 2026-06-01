@@ -52,13 +52,4 @@ val md_theme_dark_onSurface = Color(0xFFEAEAEA)
 val md_theme_dark_onSurfaceVariant = Color(0xFFAEAEB2)
 val md_theme_dark_outline = Color(0xFF636366)
 
-fun TrainingPhase.toColor(): Color = when (this) {
-    TrainingPhase.BASE_BUILDING -> Color(colorHex)
-    TrainingPhase.AEROBIC_DEVELOPMENT -> Color(colorHex)
-    TrainingPhase.TEMPO_INTRODUCTION -> Color(colorHex)
-    TrainingPhase.RACE_PREP -> Color(colorHex)
-    TrainingPhase.PEAK_TRAINING -> Color(colorHex)
-    TrainingPhase.TAPER -> Color(colorHex)
-    TrainingPhase.RACE_WEEK -> Color(colorHex)
-    TrainingPhase.RECOVERY -> Color(colorHex)
-}
+fun TrainingPhase.toColor(): Color = Color(colorHex)

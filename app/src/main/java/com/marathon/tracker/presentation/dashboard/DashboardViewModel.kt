@@ -2,19 +2,26 @@ package com.marathon.tracker.presentation.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.marathon.tracker.data.workout.WorkoutData
 import com.marathon.tracker.domain.model.HrZoneData
 import com.marathon.tracker.domain.model.PaceTrendPoint
 import com.marathon.tracker.domain.model.Race
 import com.marathon.tracker.domain.model.StravaActivity
+import com.marathon.tracker.domain.model.TodayWorkout
 import com.marathon.tracker.domain.model.WeekSummary
+import com.marathon.tracker.domain.repository.PlanRepository
 import com.marathon.tracker.domain.repository.StravaRepository
 import com.marathon.tracker.domain.repository.WorkoutRepository
+import com.marathon.tracker.domain.usecase.GetTodayWorkoutUseCase
+import com.marathon.tracker.domain.usecase.SyncStravaActivitiesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -22,6 +29,9 @@ import javax.inject.Inject
 class DashboardViewModel @Inject constructor(
     private val workoutRepository: WorkoutRepository,
     private val stravaRepository: StravaRepository,
+    private val planRepository: PlanRepository,
+    private val getTodayWorkoutUseCase: GetTodayWorkoutUseCase,
+    private val syncStravaActivitiesUseCase: SyncStravaActivitiesUseCase,
 ) : ViewModel() {
 
     val weekSummary: StateFlow<WeekSummary?> =
@@ -32,10 +42,20 @@ class DashboardViewModel @Inject constructor(
         stravaRepository.getRecentActivities(14)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val upcomingRaces: StateFlow<List<Race>> = kotlinx.coroutines.flow.flow {
-        val today = LocalDate.now()
-        emit(WorkoutData.RACES.filter { it.date >= today })
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val todayWorkout: StateFlow<TodayWorkout?> =
+        getTodayWorkoutUseCase()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    private val _isSyncing = MutableStateFlow(false)
+    val isSyncing: StateFlow<Boolean> = _isSyncing.asStateFlow()
+
+    val upcomingRaces: StateFlow<List<Race>> =
+        planRepository.observeActivePlan()
+            .map { plan ->
+                val today = LocalDate.now()
+                (plan?.races ?: emptyList()).filter { it.date >= today }
+            }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val paceTrendData: StateFlow<List<PaceTrendPoint>> =
         stravaRepository.getRecentActivities(8)
@@ -57,6 +77,20 @@ class DashboardViewModel @Inject constructor(
                 buildHrZones(avgHr)
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), defaultHrZones())
+
+    fun markCompleted(actualKm: Double, actualPaceSecPerKm: Double) {
+        viewModelScope.launch {
+            workoutRepository.markWorkoutCompleted(LocalDate.now(), actualKm, actualPaceSecPerKm)
+        }
+    }
+
+    fun syncStrava() {
+        viewModelScope.launch {
+            _isSyncing.update { true }
+            syncStravaActivitiesUseCase()
+            _isSyncing.update { false }
+        }
+    }
 
     private fun defaultHrZones() = listOf(
         HrZoneData(1, "Zone 1", 30, 0xFF4CAF50),

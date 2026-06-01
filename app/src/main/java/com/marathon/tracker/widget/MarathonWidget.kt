@@ -8,7 +8,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
@@ -38,7 +37,6 @@ import androidx.glance.unit.ColorProvider
 import com.marathon.tracker.MainActivity
 import com.marathon.tracker.domain.model.DayWorkout
 import com.marathon.tracker.domain.model.RunType
-import com.marathon.tracker.domain.model.StravaActivity
 import com.marathon.tracker.domain.model.TrainingPhase
 import com.marathon.tracker.domain.model.WidgetState
 import com.marathon.tracker.util.PaceFormatter
@@ -79,12 +77,17 @@ class MarathonWidget : GlanceAppWidget() {
     }
 }
 
+private fun phaseHeaderColor(phase: TrainingPhase) = ColorProvider(Color(phase.colorHex))
+private val onPhaseText = ColorProvider(Color(0xFF1C1C1E))
+private val stravaOrange = ColorProvider(Color(0xFFFC4C02))
+private val progressEmpty = ColorProvider(Color(0xFF3A3A3C))
+
 @Composable
 internal fun MarathonWidgetSmall(state: WidgetState?) {
     val phase = state?.currentPhase ?: TrainingPhase.BASE_BUILDING
-    val accentColor = ColorProvider(Color(phase.colorHex))
     val todayWorkout = state?.todayWorkout
     val context = LocalContext.current
+    val today = LocalDate.now()
 
     Box(
         modifier = GlanceModifier
@@ -92,75 +95,99 @@ internal fun MarathonWidgetSmall(state: WidgetState?) {
             .background(GlanceTheme.colors.surface)
             .clickable(actionStartActivity(Intent(context, MainActivity::class.java))),
     ) {
-        Row(modifier = GlanceModifier.fillMaxSize()) {
-            // Phase accent bar
+        Column(modifier = GlanceModifier.fillMaxSize()) {
+            // Phase header strip
             Box(
                 modifier = GlanceModifier
-                    .fillMaxHeight()
-                    .width(4.dp)
-                    .background(accentColor),
-            ) {}
+                    .fillMaxWidth()
+                    .height(22.dp)
+                    .background(phaseHeaderColor(phase))
+                    .padding(horizontal = 8.dp),
+                contentAlignment = Alignment.CenterStart,
+            ) {
+                Row(
+                    modifier = GlanceModifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = phase.displayName.uppercase(),
+                        style = TextStyle(color = onPhaseText, fontSize = 8.sp, fontWeight = FontWeight.Bold),
+                    )
+                    Spacer(GlanceModifier.defaultWeight())
+                    state?.weekNumber?.let {
+                        Text(
+                            text = "WK $it",
+                            style = TextStyle(color = onPhaseText, fontSize = 8.sp, fontWeight = FontWeight.Bold),
+                        )
+                    }
+                }
+            }
 
             Column(
                 modifier = GlanceModifier
                     .fillMaxSize()
-                    .padding(horizontal = 8.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                    .padding(horizontal = 8.dp, vertical = 5.dp),
             ) {
-                // Date header
-                val today = LocalDate.now()
                 Text(
                     text = today.format(DateTimeFormatter.ofPattern("EEE d MMM")).uppercase(),
-                    style = TextStyle(
-                        color = GlanceTheme.colors.onSurfaceVariant,
-                        fontSize = 10.sp,
-                    ),
+                    style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 9.sp),
                 )
+                Spacer(GlanceModifier.height(2.dp))
 
-                Spacer(modifier = GlanceModifier.height(4.dp))
-
-                // Today's run
-                if (todayWorkout != null && todayWorkout.runType != RunType.REST) {
-                    Text(
-                        text = workoutSummaryLine(todayWorkout),
-                        style = TextStyle(
-                            color = GlanceTheme.colors.onSurface,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium,
-                        ),
-                        maxLines = 2,
-                    )
-                    todayWorkout.gymSession?.let { gym ->
-                        Spacer(modifier = GlanceModifier.height(2.dp))
+                when {
+                    todayWorkout != null && todayWorkout.isRaceDay -> {
                         Text(
-                            text = gym.focus,
-                            style = TextStyle(
-                                color = GlanceTheme.colors.onSurfaceVariant,
-                                fontSize = 11.sp,
-                            ),
+                            text = "RACE DAY",
+                            style = TextStyle(color = stravaOrange, fontSize = 15.sp, fontWeight = FontWeight.Bold),
+                        )
+                        Text(
+                            text = todayWorkout.raceName ?: "",
+                            style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 10.sp),
+                            maxLines = 1,
                         )
                     }
-                } else {
-                    Text(
-                        text = "Rest Day",
-                        style = TextStyle(
-                            color = GlanceTheme.colors.onSurfaceVariant,
-                            fontSize = 13.sp,
-                        ),
-                    )
+                    todayWorkout != null && todayWorkout.runType != RunType.REST && todayWorkout.runType != RunType.GYM_ONLY -> {
+                        Text(
+                            text = todayWorkout.runType.displayName,
+                            style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 13.sp, fontWeight = FontWeight.Bold),
+                            maxLines = 1,
+                        )
+                        Text(
+                            text = "${todayWorkout.distanceKm} km",
+                            style = TextStyle(color = stravaOrange, fontSize = 18.sp, fontWeight = FontWeight.Bold),
+                        )
+                    }
+                    todayWorkout?.runType == RunType.GYM_ONLY -> {
+                        Text(
+                            text = "Gym Day",
+                            style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 13.sp, fontWeight = FontWeight.Bold),
+                        )
+                        todayWorkout.gymSession?.let {
+                            Text(text = it.focus, style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 10.sp), maxLines = 1)
+                        }
+                    }
+                    else -> {
+                        Text(
+                            text = "Rest Day",
+                            style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 13.sp),
+                        )
+                    }
                 }
 
-                Spacer(modifier = GlanceModifier.height(6.dp))
+                Spacer(GlanceModifier.defaultWeight())
 
-                // Race countdown
-                Text(
-                    text = "${state?.daysToNextRace ?: "--"}d to ${state?.nextRaceName ?: "race"}",
-                    style = TextStyle(
-                        color = GlanceTheme.colors.primary,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                    ),
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "${state?.daysToNextRace ?: "--"}d",
+                        style = TextStyle(color = stravaOrange, fontSize = 13.sp, fontWeight = FontWeight.Bold),
+                    )
+                    Spacer(GlanceModifier.width(4.dp))
+                    Text(
+                        text = state?.nextRaceName ?: "to race",
+                        style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 9.sp),
+                        maxLines = 1,
+                    )
+                }
             }
         }
     }
@@ -169,10 +196,10 @@ internal fun MarathonWidgetSmall(state: WidgetState?) {
 @Composable
 internal fun MarathonWidgetLarge(state: WidgetState?) {
     val phase = state?.currentPhase ?: TrainingPhase.BASE_BUILDING
-    val accentColor = ColorProvider(Color(phase.colorHex))
     val todayWorkout = state?.todayWorkout
     val lastActivity = state?.lastStravaActivity
     val context = LocalContext.current
+    val today = LocalDate.now()
 
     Box(
         modifier = GlanceModifier
@@ -180,141 +207,148 @@ internal fun MarathonWidgetLarge(state: WidgetState?) {
             .background(GlanceTheme.colors.surface)
             .clickable(actionStartActivity(Intent(context, MainActivity::class.java))),
     ) {
-        Row(modifier = GlanceModifier.fillMaxSize()) {
-            // Phase accent bar
+        Column(modifier = GlanceModifier.fillMaxSize()) {
+            // Phase header strip
             Box(
                 modifier = GlanceModifier
-                    .fillMaxHeight()
-                    .width(4.dp)
-                    .background(accentColor),
-            ) {}
-
-            // Left column — today's workout
-            Column(
-                modifier = GlanceModifier
-                    .fillMaxHeight()
-                    .width(170.dp)
-                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                    .fillMaxWidth()
+                    .height(20.dp)
+                    .background(phaseHeaderColor(phase))
+                    .padding(horizontal = 10.dp),
+                contentAlignment = Alignment.CenterStart,
             ) {
-                val today = LocalDate.now()
-                Text(
-                    text = today.format(DateTimeFormatter.ofPattern("EEE d MMM")).uppercase(),
-                    style = TextStyle(
-                        color = GlanceTheme.colors.onSurfaceVariant,
-                        fontSize = 10.sp,
-                    ),
-                )
-
-                Spacer(modifier = GlanceModifier.height(3.dp))
-
-                if (todayWorkout != null && todayWorkout.runType != RunType.REST) {
+                Row(
+                    modifier = GlanceModifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Text(
-                        text = workoutSummaryLine(todayWorkout),
-                        style = TextStyle(
-                            color = GlanceTheme.colors.onSurface,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                        ),
+                        text = phase.displayName.uppercase(),
+                        style = TextStyle(color = onPhaseText, fontSize = 8.sp, fontWeight = FontWeight.Bold),
+                    )
+                    Spacer(GlanceModifier.defaultWeight())
+                    state?.weekNumber?.let {
+                        Text(
+                            text = "WEEK $it",
+                            style = TextStyle(color = onPhaseText, fontSize = 8.sp, fontWeight = FontWeight.Bold),
+                        )
+                    }
+                }
+            }
+
+            Row(
+                modifier = GlanceModifier
+                    .fillMaxSize()
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
+            ) {
+                // Left column: today's workout
+                Column(
+                    modifier = GlanceModifier.defaultWeight().fillMaxHeight(),
+                ) {
+                    Text(
+                        text = today.format(DateTimeFormatter.ofPattern("EEE, d MMM")).uppercase(),
+                        style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 9.sp),
+                    )
+                    Spacer(GlanceModifier.height(3.dp))
+
+                    if (todayWorkout != null && todayWorkout.runType != RunType.REST) {
+                        Text(
+                            text = workoutSummaryLine(todayWorkout),
+                            style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 13.sp, fontWeight = FontWeight.Bold),
+                            maxLines = 1,
+                        )
+                        todayWorkout.paceRange?.let { pace ->
+                            Text(
+                                text = PaceFormatter.formatPaceRange(pace),
+                                style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 10.sp),
+                            )
+                        }
+                        todayWorkout.gymSession?.let { gym ->
+                            Text(
+                                text = "+ ${gym.focus}",
+                                style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 10.sp),
+                                maxLines = 1,
+                            )
+                        }
+                    } else {
+                        Text(
+                            text = "Rest Day",
+                            style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 13.sp),
+                        )
+                    }
+
+                    Spacer(GlanceModifier.defaultWeight())
+
+                    if (lastActivity != null && lastActivity.type == "Run") {
+                        val paceText = PaceFormatter.formatPace(lastActivity.averagePaceSecPerKm)
+                        val distText = "%.1fkm".format(lastActivity.distanceKm)
+                        Text(
+                            text = "Strava: $distText · $paceText",
+                            style = TextStyle(color = stravaOrange, fontSize = 10.sp, fontWeight = FontWeight.Medium),
+                            modifier = GlanceModifier.clickable(
+                                actionStartActivity(Intent(Intent.ACTION_VIEW, Uri.parse("strava://activities/${lastActivity.id}")))
+                            ),
+                        )
+                    }
+                }
+
+                // Divider
+                Box(
+                    modifier = GlanceModifier
+                        .fillMaxHeight()
+                        .width(1.dp)
+                        .padding(vertical = 2.dp)
+                        .background(GlanceTheme.colors.outline),
+                ) {}
+
+                // Right column: countdown + weekly progress
+                Column(
+                    modifier = GlanceModifier
+                        .defaultWeight()
+                        .fillMaxHeight()
+                        .padding(start = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "${state?.daysToNextRace ?: "--"}",
+                        style = TextStyle(color = stravaOrange, fontSize = 30.sp, fontWeight = FontWeight.Bold),
+                    )
+                    Text(
+                        text = "DAYS TO",
+                        style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 8.sp),
+                    )
+                    Text(
+                        text = state?.nextRaceName ?: "next race",
+                        style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 10.sp, fontWeight = FontWeight.Medium),
                         maxLines = 2,
                     )
-                    todayWorkout.paceRange?.let { pace ->
-                        Text(
-                            text = PaceFormatter.formatPaceRange(pace),
-                            style = TextStyle(
-                                color = GlanceTheme.colors.onSurfaceVariant,
-                                fontSize = 11.sp,
-                            ),
-                        )
-                    }
-                    todayWorkout.gymSession?.let { gym ->
-                        Spacer(modifier = GlanceModifier.height(2.dp))
-                        Text(
-                            text = gym.focus,
-                            style = TextStyle(
-                                color = GlanceTheme.colors.onSurfaceVariant,
-                                fontSize = 11.sp,
-                            ),
-                        )
-                    }
-                } else {
+                    Spacer(GlanceModifier.height(6.dp))
+                    val done = state?.weeklyKmDone ?: 0.0
+                    val target = state?.weeklyKmTarget?.coerceAtLeast(1.0) ?: 1.0
                     Text(
-                        text = "Rest Day",
-                        style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp),
+                        text = "${done.toInt()}/${target.toInt()} km",
+                        style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 9.sp),
                     )
-                }
-
-                Spacer(modifier = GlanceModifier.height(6.dp))
-
-                // Strava last activity
-                if (lastActivity != null && lastActivity.type == "Run") {
-                    val paceText = PaceFormatter.formatPace(lastActivity.averagePaceSecPerKm)
-                    val distText = "%.1fkm".format(lastActivity.distanceKm)
-                    Text(
-                        text = "$distText · $paceText",
-                        style = TextStyle(
-                            color = GlanceTheme.colors.primary,
-                            fontSize = 11.sp,
-                        ),
-                        modifier = GlanceModifier.clickable(
-                            actionStartActivity(
-                                Intent(Intent.ACTION_VIEW, Uri.parse("strava://activities/${lastActivity.id}"))
-                            )
-                        ),
-                    )
-                } else if (state?.isStravaConnected == false) {
-                    Text(
-                        text = "Connect Strava",
-                        style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 11.sp),
-                    )
+                    Spacer(GlanceModifier.height(3.dp))
+                    GlanceProgressBar(done = done, target = target)
                 }
             }
+        }
+    }
+}
 
-            // Right column — countdown + progress
-            Column(
+@Composable
+private fun GlanceProgressBar(done: Double, target: Double) {
+    val filled = ((done / target.coerceAtLeast(1.0)) * 8).toInt().coerceIn(0, 8)
+    Row(modifier = GlanceModifier.fillMaxWidth()) {
+        repeat(8) { i ->
+            Box(
                 modifier = GlanceModifier
-                    .fillMaxHeight()
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    text = "${state?.daysToNextRace ?: "--"}",
-                    style = TextStyle(
-                        color = GlanceTheme.colors.primary,
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold,
-                    ),
-                )
-                Text(
-                    text = "days to",
-                    style = TextStyle(
-                        color = GlanceTheme.colors.onSurfaceVariant,
-                        fontSize = 10.sp,
-                    ),
-                )
-                Text(
-                    text = state?.nextRaceName ?: "race",
-                    style = TextStyle(
-                        color = GlanceTheme.colors.onSurface,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium,
-                    ),
-                    maxLines = 2,
-                )
-
-                Spacer(modifier = GlanceModifier.height(8.dp))
-
-                val done = state?.weeklyKmDone ?: 0.0
-                val target = state?.weeklyKmTarget?.coerceAtLeast(1.0) ?: 1.0
-                Text(
-                    text = "%.0f/%.0fkm".format(done, target),
-                    style = TextStyle(
-                        color = GlanceTheme.colors.onSurfaceVariant,
-                        fontSize = 10.sp,
-                    ),
-                )
-            }
+                    .defaultWeight()
+                    .height(5.dp)
+                    .padding(end = if (i < 7) 1.dp else 0.dp)
+                    .background(if (i < filled) stravaOrange else progressEmpty),
+            ) {}
         }
     }
 }
@@ -325,7 +359,7 @@ private fun workoutSummaryLine(workout: DayWorkout): String {
         RunType.LONG -> "Long Run"
         RunType.TEMPO -> "Tempo"
         RunType.INTERVAL -> "Intervals"
-        RunType.MARATHON_PACE -> "Marathon Pace"
+        RunType.MARATHON_PACE -> "MP Run"
         RunType.RECOVERY_RUN -> "Recovery"
         RunType.STRIDES -> "Strides"
         RunType.RACE -> workout.raceName ?: "RACE"

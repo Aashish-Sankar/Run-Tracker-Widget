@@ -13,7 +13,6 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.DirectionsRun
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Today
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -38,7 +37,6 @@ import com.marathon.tracker.presentation.plan.PlanScreen
 import com.marathon.tracker.presentation.plan.PlanSetupScreen
 import com.marathon.tracker.presentation.settings.SettingsScreen
 import com.marathon.tracker.presentation.theme.MarathonTheme
-import com.marathon.tracker.presentation.today.TodayScreen
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -73,7 +71,6 @@ class MainActivity : ComponentActivity() {
 }
 
 private sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
-    data object Today : Screen("today", "Today", Icons.Default.Today)
     data object Dashboard : Screen("dashboard", "Dashboard", Icons.Default.Analytics)
     data object Plan : Screen("plan", "Plan", Icons.Default.CalendarMonth)
     data object Activities : Screen("activities", "Activities", Icons.Default.DirectionsRun)
@@ -82,7 +79,6 @@ private sealed class Screen(val route: String, val label: String, val icon: Imag
 }
 
 private val bottomNavItems = listOf(
-    Screen.Today,
     Screen.Dashboard,
     Screen.Plan,
     Screen.Activities,
@@ -118,10 +114,9 @@ private fun MarathonApp() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Today.route,
+            startDestination = Screen.Dashboard.route,
             modifier = Modifier.padding(innerPadding),
         ) {
-            composable(Screen.Today.route) { TodayScreen() }
             composable(Screen.Dashboard.route) { DashboardScreen() }
             composable(Screen.Plan.route) {
                 PlanScreen(onManagePlans = { navController.navigate("plan_management") })
