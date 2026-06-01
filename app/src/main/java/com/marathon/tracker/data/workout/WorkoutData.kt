@@ -312,7 +312,7 @@ object WorkoutData {
         runTypes: List<RunType>,
         paceRanges: List<PaceRange?>,
         gymSessions: List<GymSession?>,
-        coachNotes: List<String>,
+        coachNotes: List<String?>,
     ): WeekPlan {
         val startDate = PLAN_START_DATE.plusWeeks((weekNumber - 1).toLong())
         val days = DayOfWeek.entries.mapIndexed { index, dow ->

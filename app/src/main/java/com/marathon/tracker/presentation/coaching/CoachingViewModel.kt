@@ -39,7 +39,7 @@ class CoachingViewModel @Inject constructor(
             _isGenerating.update { true }
             _error.update { null }
             val result = generateCoachingReportUseCase()
-            result.onFailure { _error.update { it.message } }
+            result.onFailure { throwable -> _error.update { throwable.message } }
             _isGenerating.update { false }
         }
     }

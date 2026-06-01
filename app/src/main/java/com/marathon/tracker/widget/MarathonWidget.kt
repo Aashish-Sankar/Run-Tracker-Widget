@@ -84,12 +84,13 @@ internal fun MarathonWidgetSmall(state: WidgetState?) {
     val phase = state?.currentPhase ?: TrainingPhase.BASE_BUILDING
     val accentColor = ColorProvider(Color(phase.colorHex))
     val todayWorkout = state?.todayWorkout
+    val context = LocalContext.current
 
     Box(
         modifier = GlanceModifier
             .fillMaxSize()
             .background(GlanceTheme.colors.surface)
-            .clickable(actionStartActivity<MainActivity>()),
+            .clickable(actionStartActivity(Intent(context, MainActivity::class.java))),
     ) {
         Row(modifier = GlanceModifier.fillMaxSize()) {
             // Phase accent bar
@@ -177,7 +178,7 @@ internal fun MarathonWidgetLarge(state: WidgetState?) {
         modifier = GlanceModifier
             .fillMaxSize()
             .background(GlanceTheme.colors.surface)
-            .clickable(actionStartActivity<MainActivity>()),
+            .clickable(actionStartActivity(Intent(context, MainActivity::class.java))),
     ) {
         Row(modifier = GlanceModifier.fillMaxSize()) {
             // Phase accent bar
